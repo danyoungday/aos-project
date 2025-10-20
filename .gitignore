@@ -1,0 +1,6 @@
+.venv/
+.vscode/
+
+probe
+X.npy
+F.npy

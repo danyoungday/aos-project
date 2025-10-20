@@ -1,0 +1,1 @@
+{"timestamp": "2025-10-20T11:38:59", "scan_sleep": 6916, "pages_to_scan": 1001, "thp_count": 0, "result": {"size_mb": 1024, "passes": 2, "stride": 4096, "advise": "none", "time_sec": 0.039606, "throughput_MBps": 51709.99, "d_thp_fault_alloc": 0, "d_thp_fault_fallback": 0, "d_thp_collapse_alloc": 0, "d_thp_split_page": 0, "d_pgfault": 2, "d_pgmajfault": 0}}
