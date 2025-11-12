@@ -3,11 +3,13 @@ A super simple dummy script for the project proposal.
 """
 import json
 from pathlib import Path
+import pickle
+import re
 import subprocess
+import tempfile
 import time
 
 import numpy as np
-import pickle
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.problem import ElementwiseProblem
 from pymoo.optimize import minimize
@@ -35,9 +37,9 @@ class THPProblem(ElementwiseProblem):
             xu=np.array(xu)
         )
 
-        # Make sure transparent huge pages are enabled
+        # Enable THPs
         with open("/sys/kernel/mm/transparent_hugepage/enabled", "w", encoding="utf-8") as f:
-            f.write("always")     
+            f.write("always")
 
     def reset_system(self):
         """
@@ -53,32 +55,86 @@ class THPProblem(ElementwiseProblem):
     def set_kernel_params(self, params: dict[str, int]):
         """
         Sets the kernel params by writing to them.
+        We manually parse the parameters here. The enabled parameter is binary but represented as a string.
+        The others are floats that need to be converted to ints then strings.
         """
         for param, value in params.items():
+            if param.endswith("defrag"):
+                value_str = "always" if value > 0.5 else "defer"
+            else:
+                value_str = str(int(value))
             with open(param, "w", encoding="utf-8") as f:
-                f.write(str(value))
+                f.write(value_str)
 
+    def run_sysbench_eval(self) -> dict[str, float]:
+        """
+        Runs the sysbench memory benchmark and returns the parsed JSON output.
+        """
+        result = subprocess.run([
+            "/usr/bin/time",
+            "-f", "{\"time\": %e, \"res\": %M, \"maj\": %F, \"min\": %R}",
+            "-a", "taskset", "-c", "0",
+            "sysbench", "--verbosity=0", "memory",
+            "--memory_block_size=64M", "--memory_total_size=4096G", "--memory_access_mode=rnd",
+            "run"
+        ], check=True, capture_output=True, text=True)
+        metrics = json.loads(result.stderr)
+        return metrics
+
+    def run_memtier_eval(self) -> dict[str, float]:
+        """
+        Runs the memtier benchmark and returns the parsed JSON output.
+        """
+
+        # Resets Redis
+        subprocess.run(["redis-cli", "flushall"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+
+        # Save results to a JSON tempfile
+        metrics = {}
+        with tempfile.NamedTemporaryFile(mode="w+", delete=True) as tmpfile:
+            subprocess.run([
+                "memtier_benchmark",
+                "--protocol=redis",
+                "--threads=1",
+                "--clients=8",
+                "--test-time=60",
+                f"--json-out-file={tmpfile.name}"
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+
+            with open(tmpfile.name, "r", encoding="utf-8") as t:
+                output = json.load(t)
+                metrics = {
+                    "throughput": output["ALL STATS"]["Sets"]["Ops/sec"],
+                    "latency": output["ALL STATS"]["Sets"]["Max Latency"]
+                }
+
+        # Measure Redis memory usage
+        result = subprocess.run(["redis-cli", "info", "memory"], capture_output=True, text=True, check=True)
+
+        # Take output and convert to a dict by splitting on newlines and colons
+        info_lines = result.stdout.splitlines()
+        info_dict = {}
+        for line in info_lines:
+            if ":" in line:
+                key, value = line.split(":")
+                info_dict[key.strip()] = value.strip()
+        metrics["fragmentation"] = float(info_dict.get("mem_fragmentation_ratio"))
+
+        return metrics
 
     def _evaluate(self, x, out, *args, **kwargs):
 
         # Reset caches, memory, etc. before evaluation
         self.reset_system()
 
-        params = dict(zip(self.params, map(int, x)))
+        # Convert x to param dict
+        params = dict(zip(self.params, x))
         self.set_kernel_params(params)
 
-        result = subprocess.run([
-            "/usr/bin/time",
-            "-f", "{\"time\": %e, \"res\": %M, \"maj\": %F, \"min\": %R}",
-            "-a", "taskset", "-c", "0",
-            "sysbench", "--verbosity=0", "memory",
-            "--memory_block_size=64M", "--memory_total_size=4096GB", "--memory_access_mode=rnd",
-            "run"
-        ], check=True, capture_output=True, text=True)
+        # Run the memtier benchmark
+        metrics = self.run_memtier_eval()
 
-        metrics = json.loads(result.stderr)
-
-        out["F"] = np.array([metrics["time"], metrics["res"]])
+        out["F"] = np.array([-1 * metrics["throughput"], metrics["fragmentation"]])
 
 
 def main():
@@ -87,19 +143,20 @@ def main():
     """
     daemon = "/sys/kernel/mm/transparent_hugepage/khugepaged/"
     sys_params={
+        "/sys/kernel/mm/transparent_hugepage/defrag": [0, 1],
         daemon + "scan_sleep_millisecs": [100, 20000],
         daemon + "pages_to_scan": [1, 8192],
-        daemon + "max_ptes_none": [0, 1024],
-        daemon + "max_ptes_swap": [0, 1024],
-        daemon + "max_ptes_shared": [0, 1024]
+        daemon + "max_ptes_none": [0, 512],
+        daemon + "max_ptes_swap": [0, 512],
+        daemon + "max_ptes_shared": [0, 512],
     }
     problem = THPProblem(
         sys_params=sys_params
     )
 
     algorithm = NSGA2(
-        pop_size=20,
-        n_offsprings=20,
+        pop_size=10,
+        n_offsprings=10,
         eliminate_duplicates=True
     )
 
@@ -114,7 +171,8 @@ def main():
         verbose=True
     )
 
-    save_dir = Path("results/moreparams")
+    save_dir = Path("results/redis")
+    save_dir.mkdir(exist_ok=True, parents=True)
 
     with open(save_dir / "params.json", "w", encoding="utf-8") as f:
         json.dump(sys_params, f, indent=4)

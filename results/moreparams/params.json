@@ -1,0 +1,18 @@
+{
+    "/sys/kernel/mm/transparent_hugepage/defrag": [
+        0,
+        1
+    ],
+    "/sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs": [
+        100,
+        20000
+    ],
+    "/sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan": [
+        1,
+        8192
+    ],
+    "/sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none": [
+        0,
+        512
+    ]
+}
