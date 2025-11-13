@@ -1,0 +1,28 @@
+{
+    "sys_params": {
+        "/sys/kernel/mm/transparent_hugepage/defrag": [
+            0,
+            1
+        ],
+        "/sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs": [
+            100,
+            20000
+        ],
+        "/sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan": [
+            1,
+            8192
+        ]
+    },
+    "memtier_params": {
+        "threads": 4,
+        "clients": 20,
+        "pipeline": 32,
+        "data-size": 4096,
+        "key-maximum": 5000000,
+        "test-time": 120
+    },
+    "objectives": [
+        "throughput",
+        "fragmentation"
+    ]
+}
