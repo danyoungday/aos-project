@@ -2,9 +2,8 @@ __pycache__/
 .venv/
 .vscode/
 
-probe
-thp_bench
-randwrite
 fullresults.pkl
 X.npy
 F.npy
+
+thp_touch
