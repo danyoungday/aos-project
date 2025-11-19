@@ -1,8 +1,6 @@
 """
 Abstract class used for THP problems
 """
-import itertools
-
 import numpy as np
 
 from pymoo.core.problem import ElementwiseProblem
@@ -32,21 +30,19 @@ class SysfsProblem(ElementwiseProblem):
 
     def create_initial_pop(self):
         """
-        Looks at the ranges for sys_params and creates an initial population by taking all combinations of the
-        min, max, and midpoint of each parameter. Returns np array shape (N, n_var)
+        Looks at the ranges for sys_params and creates an initial population of size 3 with low, mid, and high values
         """
-        param_values = []
-        for _, bounds in self.sys_params.items():
-            low = bounds[0]
-            high = bounds[1]
-            mid = (low + high) // 2
-            param_values.append([low, mid, high])
-
-        all_combinations = list(itertools.product(*param_values))
         initial_pop = []
-        for combination in all_combinations:
-            initial_pop.append(list(combination))            
-
+        low = []
+        mid = []
+        high = []
+        for _, bounds in self.sys_params.items():
+            low.append(bounds[0])
+            high.append(bounds[1])
+            mid.append((bounds[0] + bounds[1]) // 2)
+        initial_pop.append(low)
+        initial_pop.append(mid)
+        initial_pop.append(high)
         return np.array(initial_pop)
 
     def set_sysfs_params(self, params: dict[str, int]):
@@ -56,14 +52,25 @@ class SysfsProblem(ElementwiseProblem):
         The others are floats that need to be converted to ints then strings.
         """
         for param, value in params.items():
+
+            # Special cases
             if param.endswith("read_ahead_kb"):
                 val = int(value)
                 if val == 0:
                     value_str = "0"
                 else:
                     value_str = str(2 ** (val + 6))
+            if param.endswith("scheduler"):
+                if val > 0.5:
+                    value_str = "mq-deadline"
+                else:
+                    value_str = "none"
+
+            # Otherwise, we just want an int
             else:
                 value_str = str(int(value))
+
+            # Then write it out
             with open(param, "w", encoding="utf-8") as f:
                 f.write(value_str)
 

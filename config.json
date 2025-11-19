@@ -11,7 +11,19 @@
             ],
             "/sys/block/nvme0n1/queue/read_ahead_kb": [
                 0,
-                6
+                7
+            ],
+            "/sys/block/nvme0n1/queue/nomerges": [
+                0,
+                3
+            ],
+            "/sys/block/nvme0n1/queue/scheduler": [
+                0,
+                3
+            ],
+            "/sys/block/nvme0n1/queue/rq_affinity": [
+                0,
+                3
             ]
         },
         "fio_params": [
@@ -32,9 +44,9 @@
         ]
     },
     "evolution_params": {
-        "n_generations": 20,
-        "population_size": 20,
-        "save_dir": "results/fio_full"
+        "n_generations": 10,
+        "population_size": 50,
+        "save_dir": "results/big_fio"
     }
     
 }
