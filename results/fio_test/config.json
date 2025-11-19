@@ -1,6 +1,10 @@
 {
     "problem_params": {
         "sys_params": {
+            "/sys/block/nvme0n1/queue/max_sectors_kb": [
+                1,
+                4096
+            ],
             "/sys/block/nvme0n1/queue/nr_requests": [
                 1,
                 128
@@ -18,7 +22,7 @@
             "ioengine=libaio",
             "direct=1",
             "time_based=1",
-            "runtime=10s",
+            "runtime=5s",
             "ramp_time=5s",
             "group_reporting=1"
         ],
@@ -28,8 +32,8 @@
         ]
     },
     "evolution_params": {
-        "n_generations": 10,
-        "population_size": 10,
+        "n_generations": 2,
+        "population_size": 2,
         "save_dir": "results/fio_test"
     }
 }

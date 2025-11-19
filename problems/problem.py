@@ -1,6 +1,8 @@
 """
 Abstract class used for THP problems
 """
+import itertools
+
 import numpy as np
 
 from pymoo.core.problem import ElementwiseProblem
@@ -12,7 +14,7 @@ class SysfsProblem(ElementwiseProblem):
     def __init__(self, sys_params: dict[str, tuple[int, int]], objectives: list[str]):
         
         self.objectives = objectives
-
+        self.sys_params = sys_params
         # Set up bounds and use super constructor
         xl = []
         xu = []
@@ -27,6 +29,25 @@ class SysfsProblem(ElementwiseProblem):
             xl=np.array(xl),
             xu=np.array(xu)
         )
+
+    def create_initial_pop(self):
+        """
+        Looks at the ranges for sys_params and creates an initial population by taking all combinations of the
+        min, max, and midpoint of each parameter. Returns np array shape (N, n_var)
+        """
+        param_values = []
+        for _, bounds in self.sys_params.items():
+            low = bounds[0]
+            high = bounds[1]
+            mid = (low + high) // 2
+            param_values.append([low, mid, high])
+
+        all_combinations = list(itertools.product(*param_values))
+        initial_pop = []
+        for combination in all_combinations:
+            initial_pop.append(list(combination))            
+
+        return np.array(initial_pop)
 
     def set_sysfs_params(self, params: dict[str, int]):
         """

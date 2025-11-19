@@ -32,3 +32,6 @@ echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://pack
 sudo apt-get update
 
 sudo apt-get install memtier-benchmark
+
+# fio benchmark
+sudo apt-get install fio -y

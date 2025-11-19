@@ -1,6 +1,7 @@
 """
 Runs the fio benchmark.
 """
+import itertools
 import json
 import subprocess
 import tempfile
@@ -17,6 +18,7 @@ class FioProblem(SysfsProblem):
         self.fio_params = config["fio_params"]
 
         super().__init__(sys_params=config["sys_params"], objectives=config["objectives"])
+
 
     def reset_system(self):
         pass

@@ -11,3 +11,66 @@ n_gen  |  n_eval  | n_nds  |      eps      |   indicator
      8 |       80 |      1 |  0.000000E+00 |             f
      9 |       90 |      1 |  0.000000E+00 |             f
     10 |      100 |      1 |  0.000000E+00 |             f
+{
+    "problem_params": {
+        "sys_params": {
+            "/sys/block/nvme0n1/queue/max_sectors_kb": [
+                1,
+                4096
+            ],
+            "/sys/block/nvme0n1/queue/nr_requests": [
+                1,
+                128
+            ],
+            "/sys/block/nvme0n1/queue/read_ahead_kb": [
+                0,
+                6
+            ]
+        },
+        "fio_params": [
+            "rw=randread",
+            "bs=4k",
+            "iodepth=32",
+            "numjobs=1",
+            "ioengine=libaio",
+            "direct=1",
+            "time_based=1",
+            "runtime=7s",
+            "ramp_time=1s",
+            "group_reporting=1"
+        ],
+        "objectives": [
+            "read_throughput",
+            "read_latency"
+        ]
+    },
+    "evolution_params": {
+        "n_generations": 20,
+        "population_size": 20,
+        "save_dir": "results/fio_full"
+    }
+}
+Saving to: results/fio_full
+==========================================================
+n_gen  |  n_eval  | n_nds  |      eps      |   indicator  
+==========================================================
+     1 |       20 |      3 |             - |             -
+     2 |       40 |      3 |  0.3192217486 |         ideal
+     3 |       60 |      4 |  0.1896860835 |             f
+     4 |       80 |      5 |  0.0816326531 |         ideal
+     5 |      100 |      5 |  0.000000E+00 |             f
+     6 |      120 |      5 |  0.000000E+00 |             f
+     7 |      140 |      5 |  0.000000E+00 |             f
+     8 |      160 |      5 |  0.0239507730 |         ideal
+     9 |      180 |      5 |  0.000000E+00 |             f
+    10 |      200 |      5 |  0.000000E+00 |             f
+    11 |      220 |      6 |  0.0425531915 |         ideal
+    12 |      240 |      5 |  0.0160974702 |             f
+    13 |      260 |      5 |  0.000000E+00 |             f
+    14 |      280 |      5 |  0.000000E+00 |             f
+    15 |      300 |      5 |  0.000000E+00 |             f
+    16 |      320 |      5 |  0.0686644767 |             f
+    17 |      340 |      5 |  0.000000E+00 |             f
+    18 |      360 |      4 |  0.0812613165 |         nadir
+    19 |      380 |      4 |  0.000000E+00 |             f
+    20 |      400 |      5 |  0.0372131635 |             f

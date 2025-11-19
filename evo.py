@@ -5,9 +5,9 @@ import json
 from pathlib import Path
 import pickle
 
+import numpy as np
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.optimize import minimize
-from pymoo.termination import get_termination
+from pymoo.operators.sampling.rnd import FloatRandomSampling
 
 from problems.fio import FioProblem
 
@@ -32,7 +32,18 @@ def main():
 
     problem = FioProblem(config["problem_params"])
 
+    # Create initial population with seeding + random
+    initial_pop = problem.create_initial_pop()
+    # Random sample the rest up to pop size if needed
+    pop_size = config["evolution_params"]["population_size"]
+    if initial_pop.shape[0] < pop_size:
+        sampling = FloatRandomSampling()
+        X_rand = sampling(problem, pop_size - initial_pop.shape[0]).get("X")
+        initial_pop = np.concatenate((initial_pop, X_rand), axis=0)
+    assert initial_pop.shape[0] == pop_size
+
     algorithm = NSGA2(
+        sampling=initial_pop,
         pop_size=config["evolution_params"]["population_size"],
         n_offsprings=config["evolution_params"]["population_size"],
         eliminate_duplicates=True
