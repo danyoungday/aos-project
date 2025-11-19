@@ -32,5 +32,4 @@
         "population_size": 10,
         "save_dir": "results/fio_test"
     }
-    
 }
