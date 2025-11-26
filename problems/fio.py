@@ -49,11 +49,13 @@ class FioProblem(SysfsProblem):
             with open(tmpfile.name, "r", encoding="utf-8") as t:
                 output = json.load(t)
                 results = output["jobs"][0]
-                metrics = {
-                    "read_throughput": -1 * results["read"]["bw"],
-                    # "write_throughput": -1 * results["write"]["bw"],
-                    "read_latency": results["read"]["clat_ns"]["percentile"]["99.990000"],
-                    # "write_latency": results["write"]["clat_ns"]["percentile"]["99.990000"]
-                }
+                if "read_throughput" in self.objectives:
+                    metrics["read_throughput"] = -1 * results["read"]["bw"]
+                    metrics["read_latency"] = results["read"]["clat_ns"]["percentile"]["99.990000"]
+                elif "write_throughput" in self.objectives:
+                    metrics["write_throughput"] = -1 * results["write"]["bw"]
+                    metrics["write_latency"] = results["write"]["clat_ns"]["percentile"]["99.990000"]
+                else:
+                    raise ValueError("Unknown objectives for FioProblem.")
 
         return metrics

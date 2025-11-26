@@ -68,7 +68,10 @@ class SysfsProblem(ElementwiseProblem):
 
             # Otherwise, we just want an int
             else:
-                value_str = str(int(value))
+                val = int(value)
+                if val == self.sys_params[param][1]:
+                    val -= 1  # The max is exclusive
+                value_str = str(val)
 
             # Then write it out
             with open(param, "w", encoding="utf-8") as f:

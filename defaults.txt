@@ -1,3 +1,0 @@
-scheduler: none
-rq_affinity: 1
-nomerges: 0
