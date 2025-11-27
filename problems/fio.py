@@ -1,7 +1,6 @@
 """
 Runs the fio benchmark.
 """
-import itertools
 import json
 import subprocess
 import tempfile
