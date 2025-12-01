@@ -27,7 +27,7 @@
             ]
         },
         "fio_params": [
-            "rw=randwrite",
+            "rw=read",
             "bs=4k",
             "iodepth=32",
             "numjobs=1",
@@ -39,14 +39,13 @@
             "group_reporting=1"
         ],
         "objectives": [
-            "write_throughput",
-            "write_latency"
+            "read_throughput",
+            "read_latency"
         ]
     },
     "evolution_params": {
         "n_generations": 10,
         "population_size": 50,
-        "save_dir": "results/rand_write"
+        "save_dir": "results/seq_read"
     }
-    
 }

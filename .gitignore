@@ -3,7 +3,5 @@ __pycache__/
 .vscode/
 
 fullresults.pkl
-X.npy
-F.npy
 
-thp_touch
+figures/

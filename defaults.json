@@ -1,0 +1,10 @@
+{
+    "max_sectors_kb": 1280,
+    "nr_requests": 127,
+    "read_ahead_kb": 128,
+    "nomerges": 0,
+    "scheduler": "none",
+    "rq_affinity": 1,
+    "throughput": -750607,
+    "latency": 643072
+}

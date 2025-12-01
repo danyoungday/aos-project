@@ -1,21 +1,18 @@
 """
 Abstract class used for THP problems
 """
-import subprocess
-import time
-
 import numpy as np
 
 from pymoo.core.problem import ElementwiseProblem
 
-class THPProblem(ElementwiseProblem):
+class SysfsProblem(ElementwiseProblem):
     """
-    Runs our THP evaluation script.
+    Runs our sysfs evaluation script.
     """
     def __init__(self, sys_params: dict[str, tuple[int, int]], objectives: list[str]):
         
         self.objectives = objectives
-
+        self.sys_params = sys_params
         # Set up bounds and use super constructor
         xl = []
         xu = []
@@ -26,39 +23,65 @@ class THPProblem(ElementwiseProblem):
             self.params.append(param)
         super().__init__(
             n_var=len(sys_params),
-            n_obj=2,
+            n_obj=len(objectives),
             xl=np.array(xl),
             xu=np.array(xu)
         )
 
-        # Enable THPs
-        with open("/sys/kernel/mm/transparent_hugepage/enabled", "w", encoding="utf-8") as f:
-            f.write("always")
-
-    def reset_system(self):
+    def create_initial_pop(self):
         """
-        Runs sudo sync to flush file system buffers, then drops caches and compacts memory.
+        Looks at the ranges for sys_params and creates an initial population of size 3 with low, mid, and high values
         """
-        subprocess.run(["sudo", "sync"], check=True)
-        with open("/proc/sys/vm/drop_caches", "w", encoding="utf-8") as f:
-            f.write("3")
-        with open("/proc/sys/vm/compact_memory", "w", encoding="utf-8") as f:
-            f.write("1")
-        time.sleep(1)
+        initial_pop = []
+        low = []
+        mid = []
+        high = []
+        for _, bounds in self.sys_params.items():
+            low.append(bounds[0])
+            high.append(bounds[1])
+            mid.append((bounds[0] + bounds[1]) // 2)
+        initial_pop.append(low)
+        initial_pop.append(mid)
+        initial_pop.append(high)
+        return np.array(initial_pop)
 
-    def set_kernel_params(self, params: dict[str, int]):
+    def set_sysfs_params(self, params: dict[str, int]):
         """
         Sets the kernel params by writing to them.
         We manually parse the parameters here. The enabled parameter is binary but represented as a string.
         The others are floats that need to be converted to ints then strings.
         """
         for param, value in params.items():
-            if param.endswith("defrag"):
-                value_str = "always" if value > 0.5 else "defer"
+
+            # Special cases
+            if param.endswith("read_ahead_kb"):
+                val = int(value)
+                if val == 0:
+                    value_str = "0"
+                else:
+                    value_str = str(2 ** (val + 6))
+            if param.endswith("scheduler"):
+                if val > 0.5:
+                    value_str = "mq-deadline"
+                else:
+                    value_str = "none"
+
+            # Otherwise, we just want an int
             else:
-                value_str = str(int(value))
+                val = int(value)
+                if val == self.sys_params[param][1]:
+                    val -= 1  # The max is exclusive
+                value_str = str(val)
+
+            # Then write it out
             with open(param, "w", encoding="utf-8") as f:
                 f.write(value_str)
+
+    def reset_system(self):
+        """
+        Resets the system before running a benchmark.
+        """
+        raise NotImplementedError("Subclasses must implement reset_system method.")
 
     def run_benchmark(self) -> dict[str, float]:
         """
@@ -74,12 +97,12 @@ class THPProblem(ElementwiseProblem):
 
         # Convert x to param dict
         params = dict(zip(self.params, x))
-        self.set_kernel_params(params)
+        self.set_sysfs_params(params)
 
-        # Run the memtier benchmark
+        # Run the benchmark
         metrics = self.run_benchmark()
-        
-        if kwargs["verbose"] == 1:
+
+        if "verbose" in kwargs and kwargs["verbose"] == 1:
             print(params)
             print(metrics)
 
