@@ -46,6 +46,6 @@
     "evolution_params": {
         "n_generations": 10,
         "population_size": 50,
-        "save_dir": "results/seq_write"
+        "save_dir": "results/seq_write2"
     }
 }
