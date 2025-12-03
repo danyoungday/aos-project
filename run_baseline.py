@@ -69,13 +69,13 @@ def get_random_baselines():
     np.random.seed(42)
 
     config_paths = [
-        "results/rand_write/config.json",
-        "results/big_fio/config.json",
-        "results/seq_write2/config.json",
+        # "results/rand_write/config.json",
+        "results/rand_read/config.json",
+        "results/seq_write/config.json",
         "results/seq_read/config.json"
     ]
-    rows = []
     for path in config_paths:
+        rows = []
         with open(path, "r", encoding="utf-8") as f:
             config = json.load(f)
             print(f"Config path: {path}")
@@ -85,7 +85,7 @@ def get_random_baselines():
 
         # Save here for checkpointing purposes
         df = pd.DataFrame(rows)
-        df.to_csv("results/random_baselines.csv", index=False)
+        df.to_csv(f"results/{path.split('/')[1]}_baselines.csv", index=False)
 
 
 if __name__ == "__main__":

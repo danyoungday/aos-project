@@ -221,3 +221,13 @@ n_gen  |  n_eval  | n_nds  |      eps      |   indicator
      8 |      400 |      6 |  0.000000E+00 |             f
      9 |      450 |      6 |  0.0974679832 |         ideal
     10 |      500 |      6 |  0.000000E+00 |             f
+Config path: results/rand_write/config.json
+Traceback (most recent call last):
+  File "/users/danyoung/aos-project/run_baseline.py", line 92, in <module>
+    get_random_baselines()
+  File "/users/danyoung/aos-project/run_baseline.py", line 79, in get_random_baselines
+    with open(path, "r", encoding="utf-8") as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'results/big_fio/config.json'
+Config path: results/rand_read/config.json
+Config path: results/seq_write/config.json
+Config path: results/seq_read/config.json

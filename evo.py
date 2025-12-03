@@ -7,6 +7,8 @@ import pickle
 
 import numpy as np
 from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.operators.crossover.sbx import SBX
+from pymoo.operators.mutation.pm import PM
 from pymoo.operators.sampling.rnd import FloatRandomSampling
 
 from problems.fio import FioProblem
@@ -46,7 +48,9 @@ def main():
         sampling=initial_pop,
         pop_size=config["evolution_params"]["population_size"],
         n_offsprings=config["evolution_params"]["population_size"],
-        eliminate_duplicates=True
+        eliminate_duplicates=True,
+        crossover=SBX(eta=5),
+        mutation=PM(eta=10)
     )
 
     algorithm.setup(

@@ -9,10 +9,6 @@
                 1,
                 128
             ],
-            "/sys/block/nvme0n1/queue/read_ahead_kb": [
-                0,
-                7
-            ],
             "/sys/block/nvme0n1/queue/nomerges": [
                 0,
                 3
@@ -34,8 +30,8 @@
             "ioengine=libaio",
             "direct=1",
             "time_based=1",
-            "runtime=7s",
-            "ramp_time=1s",
+            "runtime=15s",
+            "ramp_time=5s",
             "group_reporting=1"
         ],
         "objectives": [
@@ -44,9 +40,9 @@
         ]
     },
     "evolution_params": {
-        "n_generations": 10,
+        "n_generations": 3,
         "population_size": 50,
-        "save_dir": "results/rand_write"
+        "save_dir": "new_results/rand_write"
     }
     
 }

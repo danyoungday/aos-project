@@ -1,4 +1,5 @@
 import json
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -57,29 +58,57 @@ def eval_on_all():
     df.to_csv("results/eval_all.csv", index=False)
 
 
-def create_all_eval_table():
-    """
-    Create a table with the min, mean, and max latency and throughput for each combination of params and eval.
-    """
+def compare_paretos():
     df = pd.read_csv("results/eval_all.csv")
+    exp_names = ["seq_read", "rand_read", "seq_write", "rand_write"]
+    labels = {
+        "seq_read": "Sequential Read",
+        "rand_read": "Random Read",
+        "seq_write": "Sequential Write",
+        "rand_write": "Random Write"
+    }
 
-    grouped = df.groupby(["params", "eval"])
-    mins = grouped.min()
-    maxes = grouped.max()
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    axes = axes.flatten()
 
-    rows = []
-    for params in df["params"].unique():
-        row = f"{params} & "
-        results = []
-        for evals in df["eval"].unique():
-            results.append(f"{maxes.loc[(params, evals), 'throughput']:.0f} / {mins.loc[(params, evals), 'latency']:.0f}")
-        row += " & ".join(results)
-        rows.append(row)
+    for eval_col, ax in zip(exp_names, axes):
+        subset = df[df["eval"] == eval_col]
+        for params_col in exp_names: 
+            if params_col != eval_col:
+                pareto_subset = subset[subset["params"] == params_col]
+                ax.scatter(pareto_subset["throughput"] / 1000, pareto_subset["latency"] / 1e6, label=labels[params_col] + " Solutions")
+            else:
+                results_df = pd.read_csv(f"results/{eval_col}/results.csv")
+                final_pareto_df = results_df[(results_df["is_pareto"] == 1.0) & (results_df["gen"] == results_df["gen"].max())]
+                ax.scatter(final_pareto_df["throughput"], final_pareto_df["latency"], label=labels[params_col] + " Solutions", marker="x", s=100)
+        # ax.legend()
+        ax.set_title(f"Evaluation on {labels[eval_col]}")
+    
+    axes[0].set_xlim(0, 1100)
+    axes[1].set_xlim(0, 1100)
+    axes[0].set_ylim(0, 5)
+    axes[1].set_ylim(0, 5)
 
-    string = "\n".join(rows)
-    print(string)
+    axes[2].set_xlim(0, 700)
+    axes[3].set_xlim(0, 700)
+    axes[2].set_ylim(0, 90)
+    axes[3].set_ylim(0, 90)
+
+    # Create legend outside the plots with common labels from "labels"
+    # Make sure the legend is all points not x's
+    labels = [label + " Solutions" for label in labels.values()]
+    points = [plt.Line2D([0], [0], color="w", marker="o", markerfacecolor=f"C{i}") for i in range(len(labels))]
+    fig.legend(points, labels, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.05))
+    
+    fig.supxlabel("Throughput (MB/s)")
+    fig.supylabel("Latency (ms)")
+    fig.suptitle("Evaluation of Pareto Fronts Across Workloads")
+    plt.savefig("results/pareto_comparison.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+            
 
 if __name__ == "__main__":
     # eval_on_all()
-    create_all_eval_table()
+    compare_paretos()
 
