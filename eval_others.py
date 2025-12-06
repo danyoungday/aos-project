@@ -103,12 +103,34 @@ def compare_paretos():
     fig.supxlabel("Throughput (MB/s)")
     fig.supylabel("Latency (ms)")
     fig.suptitle("Evaluation of Pareto Fronts Across Workloads")
-    plt.savefig("results/pareto_comparison.png", dpi=300, bbox_inches="tight")
+    # plt.savefig("results/pareto_comparison.png", dpi=300, bbox_inches="tight")
     plt.close()
 
-            
+def create_table():
+    results_dirs = [
+        "results/seq_read",
+        "results/rand_read",
+        "results/seq_write",
+        "results/rand_write"
+    ]
+    eval_all_df = pd.read_csv("results/eval_all.csv")
+
+    for param_path in results_dirs:
+        results_df = pd.read_csv(param_path + "/results.csv")
+        print("Param: " + param_path.split("/")[-1])
+        row = []
+        for eval_path in results_dirs:
+            if eval_path == param_path:
+                row.append(f"{results_df['latency'].min():.2f}")
+            else:
+                params = param_path.split("/")[-1]
+                evals = eval_path.split("/")[-1]
+                subset = eval_all_df[(eval_all_df["params"] == params) & (eval_all_df["eval"] == evals)]
+                row.append(f"{(subset['latency'].min() / 1e6) :.2f}")
+        print(" & ".join(row))
 
 if __name__ == "__main__":
     # eval_on_all()
-    compare_paretos()
+    # compare_paretos()
+    create_table()
 
